@@ -1,5 +1,5 @@
 %% LPV MPC on ST
-clc; clear all; yalmip('clear');
+% clc; clear all; yalmip('clear');
 close all;
 
 load('Datos Acurex 2007-06-18.mat')
@@ -8,25 +8,9 @@ load('Datos Acurex 2007-06-18.mat')
 options = odeset ('RelTol', 1e-6, 'AbsTol', 1e-6, ...
 	'NormControl', 'on', 'InitialStep', 1.0e-2, 'MaxStep', 1.0);
 
-%% Parameters
-mum = 1100;       % [kg/m³]
-muf = 1000;       % [kg/m³]
-Ai = 0.013;       % [m²]
-Ae = 0.0038;      % [m²]
-di = 0.04;        % [m]
-de = 0.07;        % [m]
-h0 = 11;
-hi = 800;
-Cm = 440;         % [J/(kgC)]
-Cf = 4018;        % [J/(kgC)]
-nhu = 0.43*8.5;
-nx = 2; ny = 1; nu = 1; nd = 2;
-C = [0 1];             % Matriz de salida
-D = zeros(ny, nu);     % Matriz entrada/salida
-
 Ts = 3;                % Sample time [seg]
 N = 8;                 % Prediction horizon
-t = 0;                 % Start time
+t = 0;                  % Start time
 Time = 3.6e3;          % Simulation end time 
 Tsim = 0:Ts:Time;
 Nsim = length(Tsim);
@@ -35,6 +19,15 @@ Nsim = length(Tsim);
 Irr = IC151(1, 2);
 Te = TA075(1, 2);
 w0 = [Irr; Te];              % Init disturbance [Irr; Te]
+
+Tf_max = 300;
+Tf_min = 0.0247; % @ rho2 = 0.01
+Tp_max = 600;
+Tp_min = 0.0377;% @ rho1 = 0.01
+
+L = 2;  % 2 linearization points per parameter
+
+run ST_polytope
 
 % States
 x0 = [300; 92.5];            % Start-point
@@ -60,8 +53,8 @@ Rx = 1e-10;
 %% Sets and set-point
 Tp_sp = 109.92832; % Tf_sp = 97
 rho1 = di*pi*hi*(1-exp(-Tp_sp/600))/(1-exp(-1));
-syms Tf_eq
-Tf_sp = solve((-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae))*Tp_sp+rho1*Tf_eq/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
+syms Tf
+Tf_sp = solve((-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae))*Tp_sp+rho1*Tf/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
 Tf_sp = double(Tf_sp);
 xsp = [Tp_sp; Tf_sp];
 % U
@@ -73,8 +66,8 @@ usp = double(usp);
 
 % System
 A = [(-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae)) rho1/(mum*Cm*Ae);
-        rho1/(muf*Cf*Ai) -rho1/(muf*Cf*Ai)];
-B1 = [0; -rho2];
+        rho1/(muf*Cf*Ai) -rho1/(muf*Cf*Ai)]
+B1 = [0; -rho2]
 
 % Euler discretization method
 Ad = (A*Ts) + eye(nx); B1d = B1*Ts; Cd = C; Dd = D; % Modelo en el punto inicial
@@ -95,8 +88,8 @@ rho2_max=1/Ai;
 
 % Tp_modelo = 50; 
 % rho1 = di*pi*hi*(1-exp(-Tp_modelo/600))/(1-exp(-1));
-% syms Tf_eq
-% Tf_modelo = solve((-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae))*Tp_modelo+rho1*Tf_eq/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
+% syms Tf
+% Tf_modelo = solve((-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae))*Tp_modelo+rho1*Tf/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
 % Tf_modelo = double(Tf_modelo);
 % % U
 % rho1_min = di*pi*hi*(1-exp(-Tp_modelo/600))/(1-exp(-1));
@@ -104,8 +97,8 @@ rho2_max=1/Ai;
 
 % Tp_modelo = 600; % Tf_sp = 97
 % rho1 = di*pi*hi*(1-exp(-Tp_modelo/600))/(1-exp(-1));
-% syms Tf_eq
-% Tf_modelo = solve((-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae))*Tp_modelo+rho1*Tf_eq/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
+% syms Tf
+% Tf_modelo = solve((-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae))*Tp_modelo+rho1*Tf/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
 % Tf_modelo = double(Tf_modelo);
 % % U
 % rho1_max = di*pi*hi*(1-exp(-Tp_modelo/600))/(1-exp(-1));
@@ -189,7 +182,7 @@ A4d = (A*Ts) + eye(nx); B14d = B1*Ts; Cd = C; Dd = D; % Modelo en el punto inici
 % Xterm = Polyhedron(termSet(:, 1:end-1), termSet(:, end));
 % Xtermx1 = projection(Xterm, 1:nx, 'vrep');
 % Xtermx = intersect(Xtermx,Xtermx1);
-
+asdf
 figure()
 plot(Xtermx, 'Color', 'g', 'Alpha', 0.05);
 
