@@ -2,15 +2,16 @@
 clc; clear; close all;
 load('run.mat')
 
-vecrojo = [0.7; 0; 0]; vecverde = [0; 0.8; 0]; vecazul = [0; 0; 0.6]; negro = [.1; .1; .1]; gris = [.5; .7; .5];
-
-azul = [0 0.4470 0.7410];
-naranja = [0.8500 0.3250 0.0980];
-amarillo = [0.9290 0.6940 0.1250];
-violeta = [0.4940 0.1840 0.5560];
-verde = [0.4660 0.6740 0.1880];
-celeste = [0.3010 0.7450 0.9330];
-bordo = [0.6350 0.0780 0.1840];
+red = [0.7; 0; 0]; 
+black = [.1; .1; .1]; 
+gray = [.5; .7; .5];
+blue = [0 0.4470 0.7410];
+orange = [0.8500 0.3250 0.0980];
+yellow = [0.9290 0.6940 0.1250];
+violet = [0.4940 0.1840 0.5560];
+green = [0.4660 0.6740 0.1880];
+lightblue = [0.3010 0.7450 0.9330];
+purple = [0.6350 0.0780 0.1840];
 
 orange_red = [255 69 0]/255;
 forest_green = [34 139 34]/255;
@@ -20,13 +21,47 @@ gold = [255 215 0]/255;
 chocolate = [210 105 30]/255;
 arrow = [212 55 144]/255;
 
-error = abs(X(2, :) - xsp(2));
+error = abs(X(2, :) - Xsp(2));
 IAE = sum(error)/length(error);
 msg = ['IAE = ', num2str(IAE)];
 disp(msg)
 
-time_avg = mean(elapsed_time) ;
+time_avg = mean(time_MHE+time_MPC) ;
 msg = ['Mean time = ', num2str(time_avg)];
+disp(msg)
+
+% Perfonmance indices
+error = abs(X(2, :) - Xsp(2));
+IAE = trapz(t, abs(error));
+ISE = trapz(t, error.^2);
+ITAE = trapz(t, t.*abs(error));
+msg = ['IAE = ', num2str(IAE)];
+disp(msg)
+msg = ['TV = ', num2str(sum(deltaU(1, 2:end)))];
+disp(msg)
+msg = ['ITAE = ', num2str(ITAE)];
+disp(msg)
+msg = ['ISE = ', num2str(ISE)];
+disp(msg)
+
+error = abs(X(2, 1:7000) - Xsp(2));
+IAEtrack = sum(error)/length(error);
+error = abs(X(2, 7001:end) - Xsp(2));
+IAEpert = sum(error)/length(error);
+
+msg = ['IAE tracking = ', num2str(IAEtrack)];
+disp(msg)
+msg = ['ITAE disturbance = ', num2str(IAEpert)];
+disp(msg)
+
+time_avg = mean(time_MHE) ;
+msg = ['Mean time = ', num2str(time_avg)];
+disp(msg)
+time_avg = max(time_MHE) ;
+msg = ['Max time = ', num2str(time_avg)];
+disp(msg)
+time_avg = min(time_MHE) ;
+msg = ['Min time = ', num2str(time_avg)];
 disp(msg)
 
 %% Outputs
@@ -39,9 +74,9 @@ leg = legend('x_1(t)');
 set(leg, 'Location', 'NorthEast');
 leg.ItemTokenSize = [10, 10];
 subplot(212)
-plot(t, xsp(2)*ones(1, length(t)), ':', 'Color', orange_red, 'LineWidth', 1.5);
+plot(t, Xsp(2)*ones(1, length(t)), ':', 'Color', orange_red, 'LineWidth', 1.5);
 hold on
-plot(t, X(2, :), '-', 'Color', azul, 'LineWidth', 1.5);
+plot(t, X(2, :), '-', 'Color', blue, 'LineWidth', 1.5);
 hold off; axis([0 Time 92 98]); grid on
 xlabel('Time [s]'); ylabel('T_f [°C]');
 leg = legend('x_2sp', 'x_2(t)');
@@ -50,15 +85,15 @@ leg.ItemTokenSize = [10, 10];
 % Create new axes
 axes_1 = axes('Parent', fig, 'Position', [0.307 0.167 0.426 0.212], 'FontSize', 6);
 hold(axes_1, 'on');
-plot(t, xsp(2)*ones(1, length(t)), ':', 'Color', orange_red, 'LineWidth', 1.5); hold on; grid on
-plot(t, X(2, :), '-', 'Color', azul, 'LineWidth', 1.5); hold off;
+plot(t, Xsp(2)*ones(1, length(t)), ':', 'Color', orange_red, 'LineWidth', 1.5); hold on; grid on
+plot(t, X(2, :), '-', 'Color', blue, 'LineWidth', 1.5); hold off;
 box(axes_1, 'on'); grid(axes_1, 'on');
 xlim(axes_1, [0 80]); ylim(axes_1, [92 98]);
 % Create arrow
 annotation(fig, 'arrow', [0.629 0.707], [0.726 0.63]);
 annotation(fig, 'textarrow', [0.491 0.421], [0.723 0.635], ...
                     'String', {'Disturbance', 'effect'}, 'HorizontalAlignment', 'center');
-print -dsvg state.svg
+print -dsvg ../Figs/state.svg
 
 %% Input
 figure(4)
@@ -66,7 +101,7 @@ stairs(Tsim, input, 'Color', orange_red, 'LineWidth', 1.5);
 xlabel('Time [s]'); ylabel('u [m^3/s]'); grid on
 xlim([0 Time])
 pbaspect([2 1 1]);
-print -dsvg input.svg
+print -dsvg ../Figs/input.svg
 
 %% Objective function
 figure(6)
@@ -77,14 +112,53 @@ xlabel('Muestra'); ylabel('objective');
 %% Disturbance
 figure(7)
 subplot(211)
-plot(Tsim, W(1, :), '-.', 'Color', vecazul, 'LineWidth', 1.5);
+plot(Tsim, W(1, :), '-.', 'Color', blue, 'LineWidth', 1.5);
 xlim([0 Time])
 xlabel('Time [s]'); ylabel('I [W/m^2]'); grid on
 subplot(212)
 plot(Tsim, W(2, :), 'g-', 'LineWidth', 1.5);
 xlim([0 Time])
 xlabel('Time [s]'); ylabel('T_e [°C]'); grid on
-print -dsvg disturbance.svg
+print -dsvg ../Figs/disturbance.svg
+
+figure(5);
+hold on
+plot(Tsim, mu_fuzzy(1, :)); hold on; grid on;
+plot(Tsim, mu_mhe(1,:));
+plot(Tsim, mu_fuzzy(2, :));
+plot(Tsim, mu_mhe(2,:));
+plot(Tsim, mu_fuzzy(3, :));
+plot(Tsim, mu_mhe(3,:));
+plot(Tsim, mu_fuzzy(4, :));
+plot(Tsim, mu_mhe(4,:));
+xlim([0 Time]); hold off; grid on
+legend('real1', 'MHE 1', 'real2', 'MHE 2', 'real3', 'MHE 3', 'real4', 'MHE 4')
+
+figure(10);
+area((time_MHE+time_MPC)*100/3, 'FaceColor', green);
+hold on
+area(time_MPC*100/Ts, 'FaceColor', yellow, 'FaceAlpha', 0.5);
+area(time_MHE*100/Ts, 'FaceColor', blue, 'FaceAlpha', 1);
+xlabel('Iteration [k]'); ylabel('Computation effort [%]'); grid on
+axis([0 Nsim 0 3]); grid on
+pbaspect([2 1 1]);
+
+%% State space
+figure(6)
+% plot3(x0(1), x0(2), x0(3), 'o', 'Color', verde, 'LineWidth', 1.5);
+% plot3(Xsp(1, :), Xsp(2, :), Xsp(3, :), '*', 'Color', bordo, 'LineWidth', 1.5);
+% plot3(X(1, :), X(2, :), X(3, :), '-.', 'Color', azul, 'LineWidth', 1.5);
+% plot3(X(1, :), X(2, :), X(3, :), 'Color', chocolate, 'LineWidth', 1.5);
+% plot(X, 'color', 'b', 'alpha', 0.05, 'edgecolor',  blue)
+ellipse(Wbmi, Xsp, 20, 'black', '-')
+hold on
+plot(X(1, :), X(2, :), '-g')
+plot(Xsp(1), Xsp(2), '*', 'Color', purple, 'LineWidth', 1.5);
+xlabel('T_p [K]'), ylabel('T_f [K]')
+% leg = legend('x_0', 'x_s', 'nominal-MPC', 'LPV-MPC', 'X_f_{LPV}', 'Location', 'Northeast');
+% leg.ItemTokenSize = [20, 15];
+
+% print -dsvg ../Figs/space_state.svg
 
 % %% Contractive Terminal Sets
 % fig = figure(8); hold on; box on
