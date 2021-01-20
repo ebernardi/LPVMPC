@@ -1,6 +1,6 @@
 %% plot qLPV-MPC on ST
 clc; clear; close all;
-load('run.mat')
+load('run19-2021-wxa.mat')
 
 red = [0.7; 0; 0]; 
 black = [.1; .1; .1]; 
@@ -51,7 +51,7 @@ IAEpert = sum(error)/length(error);
 
 msg = ['IAE tracking = ', num2str(IAEtrack)];
 disp(msg)
-msg = ['ITAE disturbance = ', num2str(IAEpert)];
+msg = ['IAE disturbance = ', num2str(IAEpert)];
 disp(msg)
 
 time_avg = mean(time_MHE) ;
@@ -66,7 +66,10 @@ disp(msg)
 
 %% Outputs
 fig = figure(3);
+hold on;
 subplot(211)
+hold on
+
 plot(t, X(1, :), 'Color', chocolate, 'LineWidth', 1.5);
 axis([0 Time 100 300]); grid on
 xlabel('Time [s]'); ylabel('T_p [°C]');
@@ -74,6 +77,8 @@ leg = legend('x_1(t)');
 set(leg, 'Location', 'NorthEast');
 leg.ItemTokenSize = [10, 10];
 subplot(212)
+hold on
+
 plot(t, Xsp(2)*ones(1, length(t)), ':', 'Color', orange_red, 'LineWidth', 1.5);
 hold on
 plot(t, X(2, :), '-', 'Color', blue, 'LineWidth', 1.5);
@@ -97,6 +102,7 @@ print -dsvg ../Figs/state.svg
 
 %% Input
 figure(4)
+hold on
 stairs(Tsim, input, 'Color', orange_red, 'LineWidth', 1.5);
 xlabel('Time [s]'); ylabel('u [m^3/s]'); grid on
 xlim([0 Time])
@@ -104,18 +110,22 @@ pbaspect([2 1 1]);
 print -dsvg ../Figs/input.svg
 
 %% Objective function
-figure(6)
+figure(8)
+hold on
 plot(Tsim, Obj(:))
 xlim([0 Time])
 xlabel('Muestra'); ylabel('objective');
 
 %% Disturbance
 figure(7)
+hold on
 subplot(211)
+hold on
 plot(Tsim, W(1, :), '-.', 'Color', blue, 'LineWidth', 1.5);
 xlim([0 Time])
 xlabel('Time [s]'); ylabel('I [W/m^2]'); grid on
 subplot(212)
+hold on
 plot(Tsim, W(2, :), 'g-', 'LineWidth', 1.5);
 xlim([0 Time])
 xlabel('Time [s]'); ylabel('T_e [°C]'); grid on
@@ -139,12 +149,13 @@ area((time_MHE+time_MPC)*100/3, 'FaceColor', green);
 hold on
 area(time_MPC*100/Ts, 'FaceColor', yellow, 'FaceAlpha', 0.5);
 area(time_MHE*100/Ts, 'FaceColor', blue, 'FaceAlpha', 1);
-xlabel('Iteration [k]'); ylabel('Computation effort [%]'); grid on
+xlabel('Iteration [k]'); ylabel('Period consumption [%]'); grid on
 axis([0 Nsim 0 3]); grid on
 pbaspect([2 1 1]);
 
 %% State space
 figure(6)
+hold on
 % plot3(x0(1), x0(2), x0(3), 'o', 'Color', verde, 'LineWidth', 1.5);
 % plot3(Xsp(1, :), Xsp(2, :), Xsp(3, :), '*', 'Color', bordo, 'LineWidth', 1.5);
 % plot3(X(1, :), X(2, :), X(3, :), '-.', 'Color', azul, 'LineWidth', 1.5);

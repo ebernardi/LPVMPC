@@ -53,13 +53,13 @@ options = odeset ('RelTol', 1e-6, 'AbsTol', 1e-6, ...
 % 
 % % Set-point (Tf_sp = 97)
 % Tp_sp = 109.92832;
-% rho1 = di*pi*hi*(1-exp(-Tp_sp/600))/(1-exp(-1));
+% rho1_sp = di*pi*hi*(1-exp(-Tp_sp/600))/(1-exp(-1));
 % syms Tf u
-% Tf_sp = solve((-de*pi*h0/(mum*Cm*Ae)-rho1/(mum*Cm*Ae))*Tp_sp+rho1*Tf/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
+% Tf_sp = solve((-de*pi*h0/(mum*Cm*Ae)-rho1_sp/(mum*Cm*Ae))*Tp_sp+rho1_sp*Tf/(mum*Cm*Ae)+de*pi*nhu*Irr/(mum*Cm*Ae)+de*pi*h0*Te/(mum*Cm*Ae) == 0);
 % Tf_sp = double(Tf_sp);
 % Xsp = [Tp_sp; Tf_sp];
-% rho2 = (1-exp(-Tf_sp/300))/((1-exp(-1))*Ai);
-% Usp = solve(-u*rho2 + rho1*(Tp_sp - Tf_sp)/(muf*Cf*Ai)==0);
+% rho2_sp = (1-exp(-Tf_sp/300))/((1-exp(-1))*Ai);
+% Usp = solve(-u*rho2_sp + rho1_sp*(Tp_sp - Tf_sp)/(muf*Cf*Ai)==0);
 % Usp = double(Usp);
 % 
 % % |u| ≤ Usp
@@ -67,17 +67,18 @@ options = odeset ('RelTol', 1e-6, 'AbsTol', 1e-6, ...
 % 
 % % Start point
 % x0 = [300; 92.5];
-% rho1 = di*pi*hi*(1-exp(-x0(1)/600))/(1-exp(-1));
-% rho2 = (1-exp(-x0(2)/300))/((1-exp(-1))*Ai);
+% rho1_x0 = di*pi*hi*(1-exp(-x0(1)/600))/(1-exp(-1));
+% rho2_x0 = (1-exp(-x0(2)/300))/((1-exp(-1))*Ai);
 % syms u
-% u0 = solve(-u*rho2 + rho1*(x0(1) - x0(2))/(muf*Cf*Ai)==0);
+% u0 = solve(-u*rho2_x0 + rho1_x0*(x0(1) - x0(2))/(muf*Cf*Ai)==0);
 % u0 = double(u0);
 % 
 % % Terminal ingredients
-% run terminalSetsCisneros
+% run terminalIngredientsBMI
 % % Save data
 % save data.mat
 
+% Load data
 load data
 
 %% MHE
@@ -122,6 +123,7 @@ time_MPC = zeros(Nsim, 1) ;  % initilaize the elapsed times
         
         t_tic = toc(t_tic);         % get time elapsed
         time_MHE(i) = t_tic;   % store the time elapsed for the run
+        
         mu_fuzzy(:, i) = membership(x0, rho1_min, rho1_max, rho2_min, rho2_max)';
         
         % Disturbance prediction

@@ -49,4 +49,9 @@ sol = optimize(constraints, objective);
 
 Wbmi = inv(value(Z));
 
-% ellipse(Wbmi, Xsp, 20, 'black', '-')
+% System at Set-point
+A_sp = [(-de*pi*h0/(mum*Cm*Ae)-rho1_sp/(mum*Cm*Ae)) rho1_sp/(mum*Cm*Ae);
+        rho1_sp/(muf*Cf*Ai) -rho1_sp/(muf*Cf*Ai)];
+B_sp = [0; -rho2_sp];
+Ad_sp = (A_sp*Ts) + eye(nx); Bd_sp = B_sp*Ts; % Euler discretization method
+[Klqr, Plqr] = dlqr(Ad_sp, Bd_sp, Qx, Ru);
