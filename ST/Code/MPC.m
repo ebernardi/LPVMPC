@@ -14,7 +14,7 @@ xa = sdpvar(nx, 1);
 ua = sdpvar(nu, 1);
 
 objective = 0; constraints = [];
-gamma = 1e2*Plqr;
+gamma = 10*Pbmi;%4e1*Pbmi;
 
 A = [sys.Ad]*kron(mu, eye(nx));
 B = [sys.Bd]*kron(mu, eye(nu));

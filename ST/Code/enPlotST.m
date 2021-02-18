@@ -1,6 +1,6 @@
 %% plot qLPV-MPC on ST
 clc; clear; close all;
-load('run19-2021-wxa.mat')
+load('run-MHE-MPC.mat')
 
 red = [0.7; 0; 0]; 
 black = [.1; .1; .1]; 
@@ -21,15 +21,6 @@ gold = [255 215 0]/255;
 chocolate = [210 105 30]/255;
 arrow = [212 55 144]/255;
 
-error = abs(X(2, :) - Xsp(2));
-IAE = sum(error)/length(error);
-msg = ['IAE = ', num2str(IAE)];
-disp(msg)
-
-time_avg = mean(time_MHE+time_MPC) ;
-msg = ['Mean time = ', num2str(time_avg)];
-disp(msg)
-
 % Perfonmance indices
 error = abs(X(2, :) - Xsp(2));
 IAE = trapz(t, abs(error));
@@ -37,31 +28,41 @@ ISE = trapz(t, error.^2);
 ITAE = trapz(t, t.*abs(error));
 msg = ['IAE = ', num2str(IAE)];
 disp(msg)
-msg = ['TV = ', num2str(sum(deltaU(1, 2:end)))];
+input_shift = [0; input(1:end-1)];
+deltaU = abs(input_shift-input);
+msg = ['TV = ', num2str(sum(deltaU(2:end)))];
 disp(msg)
 msg = ['ITAE = ', num2str(ITAE)];
 disp(msg)
 msg = ['ISE = ', num2str(ISE)];
 disp(msg)
-
-error = abs(X(2, 1:7000) - Xsp(2));
+error = abs(X(2, 1:800) - Xsp(2));
 IAEtrack = sum(error)/length(error);
-error = abs(X(2, 7001:end) - Xsp(2));
+error = abs(X(2, 801:end) - Xsp(2));
 IAEpert = sum(error)/length(error);
-
 msg = ['IAE tracking = ', num2str(IAEtrack)];
 disp(msg)
 msg = ['IAE disturbance = ', num2str(IAEpert)];
 disp(msg)
 
-time_avg = mean(time_MHE) ;
-msg = ['Mean time = ', num2str(time_avg)];
+% Times
+time_avg = mean(time_MHE+time_MPC);
+msg = ['MHE-MPC mean time = ', num2str(time_avg)];
 disp(msg)
-time_avg = max(time_MHE) ;
-msg = ['Max time = ', num2str(time_avg)];
+time_avg = max(time_MHE+time_MPC);
+msg = ['MHE-MPC max time = ', num2str(time_avg)];
 disp(msg)
-time_avg = min(time_MHE) ;
-msg = ['Min time = ', num2str(time_avg)];
+time_avg = min(time_MHE+time_MPC);
+msg = ['MHE-MPC min time = ', num2str(time_avg)];
+disp(msg)
+time_avg = mean(time_MPC);
+msg = ['MPC mean time = ', num2str(time_avg)];
+disp(msg)
+time_avg = max(time_MPC);
+msg = ['MPC max time = ', num2str(time_avg)];
+disp(msg)
+time_avg = min(time_MPC);
+msg = ['MPC min time = ', num2str(time_avg)];
 disp(msg)
 
 %% Outputs
@@ -118,19 +119,17 @@ xlabel('Muestra'); ylabel('objective');
 
 %% Disturbance
 figure(7)
-hold on
 subplot(211)
-hold on
-plot(Tsim, W(1, :), '-.', 'Color', blue, 'LineWidth', 1.5);
-xlim([0 Time])
-xlabel('Time [s]'); ylabel('I [W/m^2]'); grid on
+plot(Tsim, W(1, :), '-.', 'Color', orange, 'LineWidth', 1.5);
+axis([0 Time 0 805])
+xlabel('Time [s]'); ylabel('Irradiance [W/m^2]'); grid on
 subplot(212)
-hold on
-plot(Tsim, W(2, :), 'g-', 'LineWidth', 1.5);
-xlim([0 Time])
+plot(Tsim, W(2, :), '-', 'Color', dark_blue, 'LineWidth', 1.5);
+axis([0 Time 27.9 28.8])
 xlabel('Time [s]'); ylabel('T_e [°C]'); grid on
 print -dsvg ../Figs/disturbance.svg
 
+%% Membership
 figure(5);
 hold on
 plot(Tsim, mu_fuzzy(1, :)); hold on; grid on;
@@ -144,6 +143,7 @@ plot(Tsim, mu_mhe(4,:));
 xlim([0 Time]); hold off; grid on
 legend('real1', 'MHE 1', 'real2', 'MHE 2', 'real3', 'MHE 3', 'real4', 'MHE 4')
 
+%% Times
 figure(10);
 area((time_MHE+time_MPC)*100/3, 'FaceColor', green);
 hold on

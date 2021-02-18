@@ -1,6 +1,5 @@
 %% LPV MPC on ST
-clc; clear all; yalmip('clear');
-close all;
+clc; clear all; yalmip('clear'); close all;
 
 load('Datos Acurex 2007-06-18.mat')
 
@@ -8,6 +7,11 @@ load('Datos Acurex 2007-06-18.mat')
 options = odeset ('RelTol', 1e-6, 'AbsTol', 1e-6, ...
 	'NormControl', 'on', 'InitialStep', 1.0e-2, 'MaxStep', 1.0);
 
+% Load sim data
+load data
+
+%% System parameters
+% This section is comment on purpose to reduce simulation time (using pre-calculated matrices)
 % Ts = 3;                     % Sample time [seg]
 % t = 0;                       % Start time
 % Time = 3.6e3;          % Simulation end time 
@@ -21,6 +25,12 @@ options = odeset ('RelTol', 1e-6, 'AbsTol', 1e-6, ...
 % 
 % %% Polytope model and sets
 % % This section is commented to reduce simulation time (using pre-calculated matrices)
+% % Tp_max = 600;
+% % Tp_mid = 110;
+% % Tp_min = 0.0377;% @ rho1 = 0.01
+% % Tf_max = 300;
+% % Tf_mid = 970;
+% % Tf_min = 0.0247; % @ rho2 = 0.01
 % Tp_max = 600;
 % Tp_min = 0.0377;% @ rho1 = 0.01
 % Tf_max = 300;
@@ -28,6 +38,7 @@ options = odeset ('RelTol', 1e-6, 'AbsTol', 1e-6, ...
 % 
 % N = 2;                       % Number of parameters
 % L = 2;                        % Linearization points per parameter
+% % L = 3;                        % Linearization points per parameter
 % M = L^N;                  % Number of models
 % 
 % run ST_polytope
@@ -74,12 +85,9 @@ options = odeset ('RelTol', 1e-6, 'AbsTol', 1e-6, ...
 % u0 = double(u0);
 % 
 % % Terminal ingredients
-% run terminalIngredientsBMI
+% run terminalIngredients
 % % Save data
 % save data.mat
-
-% Load data
-load data
 
 %% MHE
 run MHE
@@ -97,6 +105,7 @@ mu_MHE = mu_mhe(:, 1);
 Predict = zeros(nd, N_MPC);
 for k = 1:N_MPC
             Predict(:, k) = [IC151(k+1, 2); TA075(k+1, 2)];
+%             Predict(:, k) = [IC151(1, 2); TA075(1, 2)];           
 end
 
 disp('Iniciando...')
@@ -104,11 +113,13 @@ time_MHE = zeros(Nsim, 1) ;  % initilaize the elapsed times
 time_MPC = zeros(Nsim, 1) ;  % initilaize the elapsed times 
     for i = 1:Nsim
         tk = i*Ts;
-        disp(i);
+%         disp(i);
         
         % Update disturbance
         Irr = IC151(i, 2);
         Te = TA075(i, 2);
+%         Irr = IC151(1, 2);
+%         Te = TA075(1, 2);
         w = [Irr Te]';
         
         t_tic = tic;   % to get time evaluated 
@@ -120,6 +131,7 @@ time_MPC = zeros(Nsim, 1) ;  % initilaize the elapsed times
            return;
         end
         mu_mhe(:, i) = sol;
+%         mu_mhe(:, i) = ones(M, 1)/M;
         
         t_tic = toc(t_tic);         % get time elapsed
         time_MHE(i) = t_tic;   % store the time elapsed for the run
@@ -129,6 +141,7 @@ time_MPC = zeros(Nsim, 1) ;  % initilaize the elapsed times
         % Disturbance prediction
         for k = 1:N_MPC
             Predict(:, k) = [IC151(i+k+1, 2); TA075(i+k+1, 2)];
+%             Predict(:, k) = [IC151(1, 2); TA075(1, 2)];
         end
         
         t_tic = tic;   % to get time evaluated 
@@ -140,7 +153,7 @@ time_MPC = zeros(Nsim, 1) ;  % initilaize the elapsed times
             return;
         end
         umpc = sol{1}; 
-        xpred = sol{2};
+%         xpred(:, :, i) = sol{2};
         obj = sol{3};
         
         t_tic = toc(t_tic) ;              % get time elapsed
