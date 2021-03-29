@@ -76,11 +76,14 @@ for i = 1:3
     IAE = trapz(t, abs(error));
     ISE = trapz(t, error.^2);
     ITAE = trapz(t, t.*abs(error));
+    ITSE = trapz(t, t.*error.^2);
     msg = ['IAE = ', num2str(IAE)];
     disp(msg)
     msg = ['ITAE = ', num2str(ITAE)];
     disp(msg)
     msg = ['ISE = ', num2str(ISE)];
+    disp(msg)
+    msg = ['ITSE = ', num2str(ITSE)];
     disp(msg)
     
     input_shifted = [0; input(1:end-1)];
@@ -89,11 +92,18 @@ for i = 1:3
 
     error = abs(X(2, 1:5000) - Xsp(2));
     IAEtrack = trapz(t(1:5000), abs(error));
+    ITAEtrack = trapz(t(1:5000), t(1:5000).*abs(error));
     error = abs(X(2, 5001:end) - Xsp(2));
     IAEpert = trapz(t(5001:end), abs(error));
+    ITAEpert = trapz(t(5001:end), t(5001:end).*abs(error));
+
     msg = ['IAE tracking = ', num2str(IAEtrack)];
     disp(msg)
+    msg = ['ITAE tracking = ', num2str(ITAEtrack)];
+    disp(msg)
     msg = ['IAE disturbance = ', num2str(IAEpert)];
+    disp(msg)
+    msg = ['ITAE disturbance = ', num2str(ITAEpert)];
     disp(msg)
     disp(' ')
 end
@@ -237,11 +247,11 @@ print -dsvg ../Figs/membership.svg
 %% Period consumption
 fig = figure(10);
 axes1 = axes('Parent', fig, 'Position', [0.13 0.314 0.775 0.442]);
-area(Tsim, (time_MHE+time_MPC)*100/3, 'FaceColor', green); hold(axes1,'on');
+area(Tsim, (time_MHE+time_MPC)*100/Ts, 'FaceColor', green); hold(axes1, 'on');
 area(Tsim, time_MPC*100/Ts, 'FaceColor', yellow, 'FaceAlpha', 0.5);
 area(Tsim, time_MHE*100/Ts, 'FaceColor', blue, 'FaceAlpha', 1);
 xlabel('Time [s]'); ylabel('Period [%]'); grid on
-axis([0 Time 0 2]); grid(axes1,'on');
+axis([0 Time 0 2]); grid(axes1, 'on');
 leg = legend('MHE+MPC', 'MPC', 'MHE');
 set(leg, 'Location', 'NorthEast');
 set(axes1, 'FontSize', 8);
