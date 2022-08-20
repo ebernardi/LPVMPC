@@ -21,6 +21,8 @@ Simulation results, based on a Solar Thermal (ST) collector is given to illustra
 - [Gurobi](https://www.gurobi.com/)
 - [SeDuMi](http://sedumi.ie.lehigh.edu/)
 
+## Paper info
+Bernardi, Emanuel, Hugo Pipino, Carlos A. Cappelletti, and Eduardo J. Adam. "Adaptive Predictive Control for Industrial Processes." *In 2021 XIX Workshop on Information Processing and Control (RPIC)*, pp. 1-6. IEEE, 2021.
 
 Send comments and questions to:
 
